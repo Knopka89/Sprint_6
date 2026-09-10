@@ -7,8 +7,8 @@ from urls import Urls
 class TestNavigation:
     @allure.title("Логотип Самоката открывает главную страницу")
     def test_scooter_logo_opens_main_page(self, driver):
-        driver.get(Urls.ORDER_URL)
         main_page = MainPage(driver)
+        main_page.open_order_page()
 
         main_page.click_scooter_logo()
 

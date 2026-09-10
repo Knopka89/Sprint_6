@@ -1,9 +1,10 @@
 import allure
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
 
-class OrderPage:
+from pages.base_page import BasePage
+
+
+class OrderPage(BasePage):
     NAME_FIELD = [By.XPATH, "//input[@placeholder='* Имя']"]
     SURNAME_FIELD = [By.XPATH, "//input[@placeholder='* Фамилия']"]
     ADDRESS_FIELD = [
@@ -40,44 +41,31 @@ class OrderPage:
         "and contains(., 'Заказ оформлен')]",
     ]
 
-    def __init__(self, driver):
-        self.driver = driver
-
     def wait_for_load_customer_form(self):
-        WebDriverWait(self.driver, 5).until(
-            expected_conditions.visibility_of_element_located(
-                self.NAME_FIELD
-            )
-        )
+        self.wait_for_visibility(self.NAME_FIELD)
 
     def wait_for_load_rental_form(self):
-        WebDriverWait(self.driver, 5).until(
-            expected_conditions.visibility_of_element_located(
-                self.DELIVERY_DATE_FIELD
-            )
-        )
+        self.wait_for_visibility(self.DELIVERY_DATE_FIELD)
 
     def set_name(self, name):
-        self.driver.find_element(*self.NAME_FIELD).send_keys(name)
+        self.enter_text(self.NAME_FIELD, name)
 
     def set_surname(self, surname):
-        self.driver.find_element(*self.SURNAME_FIELD).send_keys(surname)
+        self.enter_text(self.SURNAME_FIELD, surname)
 
     def set_address(self, address):
-        self.driver.find_element(*self.ADDRESS_FIELD).send_keys(address)
+        self.enter_text(self.ADDRESS_FIELD, address)
 
     def set_metro(self, metro):
-        self.driver.find_element(*self.METRO_FIELD).send_keys(metro)
+        self.enter_text(self.METRO_FIELD, metro)
         metro_option = [
             self.METRO_OPTION[0],
             self.METRO_OPTION[1].format(metro),
         ]
-        WebDriverWait(self.driver, 5).until(
-            expected_conditions.element_to_be_clickable(metro_option)
-        ).click()
+        self.wait_for_clickable_and_click(metro_option)
 
     def set_phone(self, phone):
-        self.driver.find_element(*self.PHONE_FIELD).send_keys(phone)
+        self.enter_text(self.PHONE_FIELD, phone)
 
     @allure.step("Заполнить данные заказчика")
     def fill_customer_form(self, name, surname, address, metro, phone):
@@ -89,29 +77,29 @@ class OrderPage:
 
     @allure.step("Перейти ко второму шагу заказа")
     def click_next_button(self):
-        self.driver.find_element(*self.NEXT_BUTTON).click()
+        self.click_element(self.NEXT_BUTTON)
 
     def set_delivery_date(self, delivery_date):
-        self.driver.find_element(*self.DELIVERY_DATE_FIELD).send_keys(delivery_date)
-        self.driver.find_element(*self.RENTAL_TITLE).click()
+        self.enter_text(self.DELIVERY_DATE_FIELD, delivery_date)
+        self.click_element(self.RENTAL_TITLE)
 
     def set_rental_period(self, rental_period):
-        self.driver.find_element(*self.RENTAL_PERIOD_DROPDOWN).click()
+        self.click_element(self.RENTAL_PERIOD_DROPDOWN)
         rental_period_option = [
             self.RENTAL_PERIOD_OPTION[0],
             self.RENTAL_PERIOD_OPTION[1].format(rental_period),
         ]
-        self.driver.find_element(*rental_period_option).click()
+        self.click_element(rental_period_option)
 
     def set_color(self, color):
         color_checkbox = [
             self.COLOR_CHECKBOX[0],
             self.COLOR_CHECKBOX[1].format(color),
         ]
-        self.driver.find_element(*color_checkbox).click()
+        self.click_element(color_checkbox)
 
     def set_comment(self, comment):
-        self.driver.find_element(*self.COMMENT_FIELD).send_keys(comment)
+        self.enter_text(self.COMMENT_FIELD, comment)
 
     @allure.step("Заполнить данные об аренде")
     def fill_rental_form(
@@ -128,15 +116,11 @@ class OrderPage:
 
     @allure.step("Нажать кнопку оформления заказа")
     def click_order_button(self):
-        self.driver.find_element(*self.ORDER_BUTTON).click()
+        self.click_element(self.ORDER_BUTTON)
 
     @allure.step("Подтвердить заказ")
     def confirm_order(self):
-        WebDriverWait(self.driver, 5).until(
-            expected_conditions.element_to_be_clickable(
-                self.CONFIRM_ORDER_BUTTON
-            )
-        ).click()
+        self.wait_for_clickable_and_click(self.CONFIRM_ORDER_BUTTON)
 
     @allure.step("Оформить заказ самоката")
     def create_order(
@@ -166,9 +150,5 @@ class OrderPage:
 
     @allure.step("Получить сообщение об успешном заказе")
     def get_success_message(self):
-        success_message = WebDriverWait(self.driver, 5).until(
-            expected_conditions.visibility_of_element_located(
-                self.SUCCESS_MESSAGE
-            )
-        )
+        success_message = self.wait_for_visibility(self.SUCCESS_MESSAGE)
         return success_message.text

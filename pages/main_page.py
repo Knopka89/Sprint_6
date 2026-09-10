@@ -1,12 +1,11 @@
 import allure
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
 
+from pages.base_page import BasePage
 from urls import Urls
 
 
-class MainPage:
+class MainPage(BasePage):
     COOKIE_BUTTON = [By.ID, "rcc-confirm-button"]
     FAQ_TITLE = [By.XPATH, "//div[text()='Вопросы о важном']"]
     FAQ_QUESTION = [By.ID, "accordion__heading-{}"]
@@ -16,22 +15,21 @@ class MainPage:
     SCOOTER_LOGO = [By.XPATH, "//a[@href='/']"]
     YANDEX_LOGO = [By.XPATH, "//a[@href='//yandex.ru']"]
 
-    def __init__(self, driver):
-        self.driver = driver
-
     @allure.step("Открыть главную страницу Самоката")
     def open(self):
-        self.driver.get(Urls.BASE_URL)
+        self.open_page(Urls.BASE_URL)
         self.wait_for_load_home_page()
         self.accept_cookies()
 
+    @allure.step("Открыть страницу заказа Самоката")
+    def open_order_page(self):
+        self.open_page(Urls.ORDER_URL)
+
     def wait_for_load_home_page(self):
-        WebDriverWait(self.driver, 5).until(
-            expected_conditions.visibility_of_element_located(self.FAQ_TITLE)
-        )
+        self.wait_for_visibility(self.FAQ_TITLE)
 
     def accept_cookies(self):
-        cookie_buttons = self.driver.find_elements(*self.COOKIE_BUTTON)
+        cookie_buttons = self.find_elements(self.COOKIE_BUTTON)
         if cookie_buttons and cookie_buttons[0].is_displayed():
             cookie_buttons[0].click()
 
@@ -50,46 +48,33 @@ class MainPage:
     @allure.step("Открыть вопрос номер {question_number}")
     def click_question(self, question_number):
         question_locator = self.get_question_locator(question_number)
-        self.driver.find_element(*question_locator).click()
+        self.click_element(question_locator)
 
     @allure.step("Получить ответ на вопрос номер {question_number}")
     def get_answer_text(self, question_number):
         answer_locator = self.get_answer_locator(question_number)
-        answer = WebDriverWait(self.driver, 5).until(
-            expected_conditions.visibility_of_element_located(answer_locator)
-        )
+        answer = self.wait_for_visibility(answer_locator)
         return answer.text
 
     @allure.step("Нажать кнопку заказа: {button_position}")
     def click_order_button(self, button_position):
         if button_position == "top":
-            self.driver.find_element(*self.TOP_ORDER_BUTTON).click()
+            self.click_element(self.TOP_ORDER_BUTTON)
         else:
-            self.driver.find_element(*self.BOTTOM_ORDER_BUTTON).click()
+            self.click_element(self.BOTTOM_ORDER_BUTTON)
 
     @allure.step("Нажать логотип Самоката")
     def click_scooter_logo(self):
-        self.driver.find_element(*self.SCOOTER_LOGO).click()
+        self.click_element(self.SCOOTER_LOGO)
 
     @allure.step("Нажать логотип Яндекса")
     def click_yandex_logo(self):
-        self.driver.find_element(*self.YANDEX_LOGO).click()
-
-    @allure.step("Переключиться в новое окно")
-    def switch_to_new_window(self):
-        WebDriverWait(self.driver, 10).until(
-            expected_conditions.number_of_windows_to_be(2)
-        )
-        self.driver.switch_to.window(self.driver.window_handles[1])
+        self.click_element(self.YANDEX_LOGO)
 
     def wait_for_scooter_main_page(self):
-        WebDriverWait(self.driver, 5).until(
-            expected_conditions.url_to_be(Urls.BASE_URL)
-        )
-        return self.driver.current_url
+        self.wait_for_url(Urls.BASE_URL)
+        return self.get_current_url()
 
     def wait_for_dzen_page(self):
-        WebDriverWait(self.driver, 10).until(
-            expected_conditions.url_contains(Urls.DZEN_URL)
-        )
-        return self.driver.current_url
+        self.wait_for_url_contains(Urls.DZEN_URL)
+        return self.get_current_url()
